@@ -18,53 +18,35 @@ This is the opposite of [Azure Credentials --> GCP resources](https://cloud.goog
 
 ---
 
-### Azure Tenant, Subscription and Resources
+First step is to configure federation trust between a GCP service account and Azure
 
 
-In this tutorial, we will start with
+### GCP Service Account
 
-An `Azure Subscription` with resource group consisting of a `VM` and `Storage Container`. I'm assuming you would have already set this up.
+For the sake of simplicity, we will create a service account on GCP and _download_ a service account key. 
 
-From there we will [Use the portal to create an Azure AD application and service principal that can access resources](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
+In practice, its *not* advisable to download an actual key (it has security risks there)...but since this is a tutorial, we can do this.
 
-
-First note down your
-
-- [tenant](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-create-new-tenant)
-
-![images/tenant.png](images/tenant.png)
-
--  [subscription](https://docs.microsoft.com/en-us/dynamics-nav/how-to--sign-up-for-a-microsoft-azure-subscription), vm and container i'll use are
-
-![images/subscription.png](images/subscription.png)
-
-- [resource_group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal)
-
-![images/resource_group.png](images/resource_group.png)
-
-- [vm name](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal)
-
-![images/vm.png](images/vm.png)
-
-- [storage account and container name](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview)
-
-![images/storage_account.png](images/storage_account.png)
-
-
-[https://accounts.google.com/.well-known/openid-configuration](https://accounts.google.com/.well-known/openid-configuration)
-
+If you intend to run in cloud run, cloud functions, gke or gce vm (or on prem), you can use impersonation even abstract with workload federation
 
 
 ```bash
 
 export PROJECT_ID=`gcloud config get-value core/project`
+
 gcloud iam service-accounts create elevate --display-name "Federated Service Account"
+
 gcloud iam service-accounts keys create svc_account.json --iam-account elevate@$PROJECT_ID.iam.gserviceaccount.com
+
 gcloud auth activate-service-account --key-file=`pwd`/svc_account.json
 
 export FEDERATED_TOKEN=`gcloud auth print-identity-token --audiences api://AzureADTokenExchange`
 echo $FEDERATED_TOKEN
 ```
+
+You can display the specifications of the oidc federated token by going to [jwt.io](jwt.io).  
+
+Note the `sub` field we used.  That is the unique id which we will configure Azure to trust.
 
 ```json
       {
@@ -80,7 +62,89 @@ echo $FEDERATED_TOKEN
 ```
 
 
+### Azure Tenant, Subscription and Resources
 
+In this tutorial, we will start with
+
+An `Azure Subscription` with resource group consisting of a `VM` and `Storage Container`. I'm assuming you would have already set this up.
+
+From there we will [Use the portal to create an Azure AD application and service principal that can access resources](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
+
+
+note down the `id` and names for
+
+
+tenant](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-create-new-tenant)
+
+![images/tenant.png](images/tenant.png)
+
+[subscription](https://docs.microsoft.com/en-us/dynamics-nav/how-to--sign-up-for-a-microsoft-azure-subscription), vm and container i'll use are
+
+![images/subscription.png](images/subscription.png)
+
+[resource_group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal)
+
+![images/resource_group.png](images/resource_group.png)
+
+[vm name](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal)
+
+![images/vm.png](images/vm.png)
+
+[storage account and container name](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview)
+
+![images/storage_account.png](images/storage_account.png)
+
+
+### Federate GCP->Azure
+
+With the azure resource and service acccount handy, we'll setup OIDC federation.
+
+Google, as expected provides the standard well known endpoint oidc
+
+* [https://accounts.google.com/.well-known/openid-configuration](https://accounts.google.com/.well-known/openid-configuration)
+
+
+We will specify the issuer url when we configure Azure next
+
+
+On the azure console under `Azure Active Directory` register a new app as described [here](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal).
+
+
+Select `App Registration` -> (`Accounts in this organizational directory only (Default Directory only - Single tenant)`).   I named my app `testapp`
+
+Note down the `ID Values` for the app registration
+
+![images/app.png](images/app.png)
+
+
+Now select the `Client credentials` link and then create a new`Federated Credentials` with the specifications:
+
+![images/federated.png](images/federated.png)
+
+Specifically, set the issuer to `https://accounts.google.com/` (you don't need to specify the well known path since its..well, well known)
+
+
+Create an Azure Group and add this appID as a member
+
+![images/group1_member.png](images/group1_member.png)
+
+
+Finally, add IAM permissions to this group (i set the permissions at the resource_group level).  The two roles i used were : `Reader` and `Reader and Data Viewer`:
+
+![images/rg_role.png](images/rg_role.png)
+
+---
+
+thats a lot of steps but w'ere finally ready to login.  
+
+
+The `-u` value below is the `TenantID` value you created.  The tenant value is the domain for the tenant and in my case is `srashid123hotmail.onmicrosoft.com`
+
+
+If all goes well, you should be logged in with a federated token and able to list the VM's and any blobs in the container
+
+
+```bash
 az login   --service-principal \
     -u cffeaee2-5617-4784-8a4b-b647efd676d2  \
     --federated-token $FEDERATED_TOKEN --tenant srashid123hotmail.onmicrosoft.com --allow-no-subscriptions --output table
@@ -88,9 +152,6 @@ az login   --service-principal \
 CloudName    HomeTenantId                          IsDefault    Name           State    TenantId
 -----------  ------------------------------------  -----------  -------------  -------  ------------------------------------
 AzureCloud   45243fbe-b73f-4f7d-8213-a104a99e228e  True         Pay-As-You-Go  Enabled  45243fbe-b73f-4f7d-8213-a104a99e228e
-
-
-$ az account get-access-token
 
 
 $ az storage blob list     --account-name mineralminutia    --container-name mineral-minutia  --output table --only-show-errors
@@ -103,10 +164,10 @@ $ az vm list --output table
 Name    ResourceGroup    Location    Zones
 ------  ---------------  ----------  -------
 vm1     RG1              eastus      1
-
-
 ```
 
+
+You can also use the raw curl to access the resource (eg compute; storage i came to find out is much more complicated)
 ```bash
 
 export TENANT="srashid123hotmail.onmicrosoft.com"
@@ -137,21 +198,57 @@ $ curl -s -H "Authorization: Bearer $AZURE_TOKEN" \
         },
         "storageProfile": {
           "imageReference": {
-
-
-
-
 ```
 
----
+### golang library ("github.com/salrashid123/azcompat/google")
 
+This repo also contains an azure-compatible library which will automatically acquire and use a google_id token, exchange it for an azure one and all as a go Credential object for the azure SDK.
+
+To use this, import the library and specify the id values you used for the tenant, subscription, app registration client_id, etc 
+
+```bash
+import (
+	azcompat "github.com/salrashid123/azcompat/google"
+)
+
+const (
+	clientID = "cffeaee2-5617-4784-8a4b-b647efd676d2"
+	audience = "api://AzureADTokenExchange"
+	tenantID = "45243fbe-b73f-4f7d-8213-a104a99e228e"
+
+	subscriptionID = "450b3122-bc25-49b7-86be-7dc86269a2e4"
+	resourceGroup  = "rg1"
+	vmName         = "vm1"
+
+	containerName = "mineral-minutia"
+	accountName   = "mineralminutia"
+)
+
+func main() {
+
+	ctx := context.Background()
+
+	//cred, err := azidentity.NewDefaultAzureCredential(nil)
+
+	cred, err := azcompat.NewGCPAZCredentials(&azcompat.GCPAZCredentialsOptions{
+		ClientID: clientID,
+		Audience: audience,
+		TenantID: tenantID,
+	})
+
+
+	client, err := armcompute.NewVirtualMachinesClient(subscriptionID, cred, nil)
+```
+
+edit `main.go` in this repo, set the google credential env var to the svc account key file and rn the program:
 ```bash
 export GODEBUG=http2debug=2
 
-export GOOGLE_APPLICATION_CREDENTIALS=/home/srashid/gcp_misc/certs/elevate-fabled-ray-104117.json
+export GOOGLE_APPLICATION_CREDENTIALS=`pwd`/svc_account.json
 
 go run main.go
-
 ```
 
+
+The sample tries to print the specs of the VM and then acquires the StorageAccounts Key.  It will use the keys to list blobs in the container.
 
