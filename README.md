@@ -6,6 +6,9 @@ You can use this procedure to access azure resources directly from `Google Cloud
 
 This is the opposite of [Azure Credentials --> GCP resources](https://cloud.google.com/iam/docs/configuring-workload-identity-federation#azure) and basically uses [Azure Workload Identity Federation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation#how-it-works) to trust a google-issued `OIDC` token.  The final api call to azure will use an [access token request with a federated credential](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow#third-case-access-token-request-with-a-federated-credential)
 
+---
+
+>> this repo is **not** supported by google
 
 ---
 
