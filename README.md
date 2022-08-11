@@ -97,10 +97,6 @@ note down the `id` and names for
 
 ![images/storage_account.png](images/storage_account.png)
 
-- [Resource Group IAM Roles](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal)
-
-![images/rg_role.png](images/rg_role.png)
-
 ### Federate GCP->Azure
 
 With the azure resource and service acccount handy, we'll setup OIDC federation.
