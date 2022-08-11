@@ -11,6 +11,7 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.0.0
+	github.com/salrashid123/azcompat/google v0.0.0-20220811132109-02f414a1ce5d
 )
 
 require (
