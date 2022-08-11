@@ -5,18 +5,17 @@ go 1.18
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.4.1
 	//github.com/salrashid123/azcompat/google v0.0.0
-	google.golang.org/api v0.91.0 // indirect
+	google.golang.org/api v0.92.0 // indirect
 )
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.0.0
-	github.com/salrashid123/azcompat/google v0.0.0-20220811001549-645c5abf933d
 )
 
 require (
 	cloud.google.com/go/compute v1.7.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.0.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.1.2 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
