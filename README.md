@@ -77,26 +77,29 @@ From there we will [Use the portal to create an Azure AD application and service
 note down the `id` and names for
 
 
-tenant](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-create-new-tenant)
+- [tenant](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-create-new-tenant)
 
 ![images/tenant.png](images/tenant.png)
 
-[subscription](https://docs.microsoft.com/en-us/dynamics-nav/how-to--sign-up-for-a-microsoft-azure-subscription), vm and container i'll use are
+- [subscription](https://docs.microsoft.com/en-us/dynamics-nav/how-to--sign-up-for-a-microsoft-azure-subscription), vm and container i'll use are
 
 ![images/subscription.png](images/subscription.png)
 
-[resource_group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal)
+- [resource_group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal)
 
 ![images/resource_group.png](images/resource_group.png)
 
-[vm name](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal)
+- [vm name](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal)
 
 ![images/vm.png](images/vm.png)
 
-[storage account and container name](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview)
+- [storage account and container name](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview)
 
 ![images/storage_account.png](images/storage_account.png)
 
+- [Resource Group IAM Roles](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal)
+
+![images/rg_role.png](images/rg_role.png)
 
 ### Federate GCP->Azure
 
@@ -253,5 +256,5 @@ go run main.go
 ```
 
 
-The sample tries to print the specs of the VM and then acquires the StorageAccounts Key.  It will use the keys to list blobs in the container.
+The sample tries to print the specs of the VM and then acquires the `StorageAccounts Key`.  It will use the keys to list blobs in the container.  I'm unsure if getting the access key via admin is the best way but its what i've read so far....
 
