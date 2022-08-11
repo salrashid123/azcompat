@@ -49,7 +49,7 @@ echo $FEDERATED_TOKEN
 
 You can display the specifications of the oidc federated token by going to [jwt.io](jwt.io).  
 
-Note the `sub` field we used.  That is the unique id which we will configure Azure to trust.
+Note the `sub` field we used (in my case its `117471943676050750091`).  That is the unique id which we will configure Azure to trust.
 
 ```json
       {
@@ -128,6 +128,8 @@ Now select the `Client credentials` link and then create a new`Federated Credent
 ![images/federated.png](images/federated.png)
 
 Specifically, set the issuer to `https://accounts.google.com/` (you don't need to specify the well known path since its..well, well known)
+
+Critically, the subject is the unique identifier for the service account on Google's side that is specified in the oidc token presented.  In my case, its `117471943676050750091` 
 
 
 Create an Azure Group and add this appID as a member
