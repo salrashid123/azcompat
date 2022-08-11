@@ -15,7 +15,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
 )
 
@@ -35,7 +34,6 @@ type GCPAZCredentialsOptions struct {
 
 type GCPAZCredential struct {
 	cred  azcore.TokenCredential
-	ts    oauth2.TokenSource
 	copts GCPAZCredentialsOptions
 }
 
@@ -44,22 +42,12 @@ func NewGCPAZCredentials(options *GCPAZCredentialsOptions) (*GCPAZCredential, er
 		return nil, errors.New("Must specify GCPAZCredentialsOptions clientID, Audience and TenantID")
 	}
 
-	ctx := context.Background()
-	ts, err := idtoken.NewTokenSource(ctx, options.Audience)
-	if err != nil {
-		return nil, errors.New("could not create gcp oidc token source")
-	}
 	return &GCPAZCredential{
-		ts:    ts,
 		copts: *options,
 	}, nil
 }
 
 func (c *GCPAZCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
-	tok, err := c.ts.Token()
-	if err != nil {
-		return azcore.AccessToken{}, err
-	}
 
 	// note:  https://stackoverflow.com/questions/62677157/passing-multiple-scope-values-to-oauth-token-endpoint
 	///   i'm not sure when and why you'd set multiple scopes in policy.TokenRequestOptions...
@@ -67,6 +55,16 @@ func (c *GCPAZCredential) GetToken(ctx context.Context, opts policy.TokenRequest
 
 	if len(opts.Scopes) != 1 {
 		return azcore.AccessToken{}, errors.New("you must specify precisely one scope")
+	}
+
+	ts, err := idtoken.NewTokenSource(ctx, c.copts.Audience)
+	if err != nil {
+		return azcore.AccessToken{}, errors.New("could not create gcp oidc token source")
+	}
+
+	tok, err := ts.Token()
+	if err != nil {
+		return azcore.AccessToken{}, err
 	}
 
 	stsClient := &http.Client{}
