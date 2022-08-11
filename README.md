@@ -171,6 +171,9 @@ vm1     RG1              eastus      1
 ```
 
 
+>> The federated token `az` uses in the samples above (`FEDERATED_TOKEN`) will expire in an hour. While the azure cli uses its own derived token using federated token, that too has an expiration date/time. This means that the `az` client will stop working in an hour or so since it has no idea how to ask for a new federated login token. The better way here is to request a new federated token and use that as shown below outside of a cli. The go library contained in this repo will also refresh using a new federated token for you so that step is take care of; its just an issue while using the az cli)
+
+
 You can also use the raw curl to access the resource (eg compute; storage i came to find out is much more complicated)
 ```bash
 
@@ -185,6 +188,7 @@ curl -s https://login.microsoftonline.com/$TENANT/oauth2/v2.0/token \
 --data-urlencode "client_assertion=$FEDERATED_TOKEN" \
 --data-urlencode "scope=https://management.core.windows.net/.default"
 
+## export the token from the response above into the  AZURE_TOKEN env-var
 
 $ curl -s -H "Authorization: Bearer $AZURE_TOKEN" \
     "https://management.azure.com/subscriptions/450b3122-bc25-49b7-86be-7dc86269a2e4/providers/Microsoft.Compute/virtualMachines?api-version=2022-03-01" | jq '.'
